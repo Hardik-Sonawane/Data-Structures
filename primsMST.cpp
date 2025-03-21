@@ -102,4 +102,4 @@ public:
 int main() {
     JobTravel jt;
     return 0;
-}
+} 
