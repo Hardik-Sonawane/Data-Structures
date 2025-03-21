@@ -5,10 +5,10 @@ using namespace std;
 
 class JobTravel {
 public:
-    int dist[100][100];
-    int city[100];
-    bool visited[100]; 
-    int parent[100]; 
+    int dist[100][100];  
+    char city[100];      
+    bool visited[100];  
+    int parent[100];    
     int numCities, totalCost;
 
     JobTravel() {
@@ -16,16 +16,17 @@ public:
         cin >> numCities;
 
         for (int i = 0; i < numCities; i++) {
-            city[i] = -1;
+            city[i] = '\0';  // Initialize with null character
             visited[i] = false;
             parent[i] = -1;
             for (int j = 0; j < numCities; j++) {
-                dist[i][j] = INT_MAX;
+                dist[i][j] = INT_MAX;  // Initialize distances to infinity
             }
         }
 
         cout << "Enter travel distances between cities (from to distance):\n";
-        int from, to, d, idx = 0;
+        char from, to; 
+        int d, idx = 0;
         for (int i = 0; i < numCities * (numCities - 1) / 2; i++) {
             cin >> from >> to >> d;
 
@@ -39,7 +40,7 @@ public:
         findMST();
     }
 
-    int getCityIndex(int name, int &idx) {
+    int getCityIndex(char name, int &idx) {
         for (int i = 0; i < idx; i++) {
             if (city[i] == name)
                 return i;
@@ -55,7 +56,7 @@ public:
         for (int i = 0; i < numCities; i++) {
             key[i] = INT_MAX;
         }
-        
+
         key[0] = 0;
         parent[0] = -1;
 
@@ -88,8 +89,10 @@ public:
 
     void printMST() {
         cout << "\nMinimum Travel Plan (MST):\n";
+        totalCost = 0;
         for (int i = 1; i < numCities; i++) {
-            cout << city[parent[i]] << " -> " << city[i] << " (Distance: " << dist[parent[i]][i] << ")\n";
+            cout << city[parent[i]] << " -> " << city[i] 
+                 << " (Distance: " << dist[parent[i]][i] << ")\n";
             totalCost += dist[parent[i]][i];
         }
         cout << "Total Travel Distance: " << totalCost << endl;
