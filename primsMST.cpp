@@ -9,25 +9,28 @@ public:
     char city[100];      
     bool visited[100];  
     int parent[100];    
-    int numCities, totalCost;
+    int numCities, numEdges, totalCost;
 
     JobTravel() {
         cout << "Enter number of cities: ";
         cin >> numCities;
 
+        cout << "Enter number of edges: ";
+        cin >> numEdges;
+
         for (int i = 0; i < numCities; i++) {
-            city[i] = '\0';  // Initialize with null character
+            city[i] = '\0';  
             visited[i] = false;
             parent[i] = -1;
             for (int j = 0; j < numCities; j++) {
-                dist[i][j] = INT_MAX;  // Initialize distances to infinity
+                dist[i][j] = (i == j) ? 0 : INT_MAX;  
             }
         }
 
         cout << "Enter travel distances between cities (from to distance):\n";
         char from, to; 
         int d, idx = 0;
-        for (int i = 0; i < numCities * (numCities - 1) / 2; i++) {
+        for (int i = 0; i < numEdges; i++) {
             cin >> from >> to >> d;
 
             int x = getCityIndex(from, idx);
@@ -65,7 +68,7 @@ public:
             visited[u] = true;
 
             for (int v = 0; v < numCities; v++) {
-                if (!visited[v] && dist[u][v] < key[v]) {
+                if (!visited[v] && dist[u][v] != INT_MAX && dist[u][v] < key[v]) {
                     key[v] = dist[u][v];
                     parent[v] = u;
                 }
@@ -102,4 +105,4 @@ public:
 int main() {
     JobTravel jt;
     return 0;
-} 
+}
