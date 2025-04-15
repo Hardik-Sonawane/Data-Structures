@@ -1,0 +1,187 @@
+#include <iostream>
+#include <string>
+#include <climits>
+using namespace std;
+
+const int MAX_LOCATIONS = 20; // Maximum number of locations (home + marriage halls)
+
+struct WeddingPlanner {
+    string locations[MAX_LOCATIONS]; // [0] = home, rest are marriage halls
+    int travelTimes[MAX_LOCATIONS][MAX_LOCATIONS];
+    int locationCount;
+    
+    void initialize() {
+        locationCount = 0;
+        for (int i = 0; i < MAX_LOCATIONS; i++) {
+            for (int j = 0; j < MAX_LOCATIONS; j++) {
+                travelTimes[i][j] = 0; // 0 means no direct path
+            }
+        }
+    }
+    
+    void addLocations() {
+        cout << "Enter your current location (home): ";
+        cin >> locations[0];
+        
+        cout << "How many marriage halls to consider? (max " << MAX_LOCATIONS-1 << "): ";
+        cin >> locationCount;
+        locationCount++; // Include home location
+        
+        for (int i = 1; i < locationCount; i++) {
+            cout << "Enter marriage hall " << i << " name: ";
+            cin >> locations[i];
+        }
+    }
+    
+    void addTravelTime() {
+        string location1, location2;
+        int time, idx1 = -1, idx2 = -1;
+        
+        cout << "Enter first location: ";
+        cin >> location1;
+        cout << "Enter second location: ";
+        cin >> location2;
+        
+        // Find location indices
+        for (int i = 0; i < locationCount; i++) {
+            if (locations[i] == location1) idx1 = i;
+            if (locations[i] == location2) idx2 = i;
+        }
+        
+        if (idx1 == -1 || idx2 == -1) {
+            cout << "Invalid location name(s)\n";
+            return;
+        }
+        
+        cout << "Enter travel time between them (minutes): ";
+        cin >> time;
+        
+        if (time <= 0) {
+            cout << "Time must be positive\n";
+            return;
+        }
+        
+        travelTimes[idx1][idx2] = time;
+        travelTimes[idx2][idx1] = time; // Two-way travel
+    }
+    
+    void showTravelTimes() {
+        cout << "\nTravel Time Matrix:\n";
+        cout << "\t\t";
+        for (int i = 0; i < locationCount; i++) {
+            cout << locations[i] << "\t";
+        }
+        cout << endl;
+        
+        for (int i = 0; i < locationCount; i++) {
+            cout << locations[i] << "\t\t";
+            for (int j = 0; j < locationCount; j++) {
+                if (travelTimes[i][j] == 0 && i != j) {
+                    cout << "X\t"; // No direct path
+                } else {
+                    cout << travelTimes[i][j] << "\t";
+                }
+            }
+            cout << endl;
+        }
+    }
+    
+    void findOptimalRoutes() {
+        string home;
+        cout << "Enter your home location: ";
+        cin >> home;
+        
+        int homeIdx = -1;
+        for (int i = 0; i < locationCount; i++) {
+            if (locations[i] == home) {
+                homeIdx = i;
+                break;
+            }
+        }
+        
+        if (homeIdx == -1) {
+            cout << "Location not found!\n";
+            return;
+        }
+        
+        // Dijkstra's algorithm
+        int dist[MAX_LOCATIONS];
+        bool visited[MAX_LOCATIONS];
+        
+        for (int i = 0; i < locationCount; i++) {
+            dist[i] = INT_MAX;
+            visited[i] = false;
+        }
+        dist[homeIdx] = 0;
+        
+        for (int count = 0; count < locationCount-1; count++) {
+            int minDist = INT_MAX, u = -1;
+            for (int v = 0; v < locationCount; v++) {
+                if (!visited[v] && dist[v] < minDist) {
+                    minDist = dist[v];
+                    u = v;
+                }
+            }
+            
+            if (u == -1) break;
+            visited[u] = true;
+            
+            for (int v = 0; v < locationCount; v++) {
+                if (!visited[v] && travelTimes[u][v] && dist[u] != INT_MAX
+                    && dist[u] + travelTimes[u][v] < dist[v]) {
+                    dist[v] = dist[u] + travelTimes[u][v];
+                }
+            }
+        }
+        
+        cout << "\nOptimal Travel Times from " << home << ":\n";
+        for (int i = 0; i < locationCount; i++) {
+            if (i == homeIdx) continue; // Skip home location
+            
+            if (dist[i] == INT_MAX) {
+                cout << "To " << locations[i] << ": No path available\n";
+            } else {
+                cout << "To " << locations[i] << ": " << dist[i] << " minutes\n";
+            }
+        }
+    }
+};
+
+int main() {
+    WeddingPlanner planner;
+    planner.initialize();
+    
+    int choice;
+    do {
+        cout << "\nWedding Planning Menu:\n";
+        cout << "1. Add locations (home + marriage halls)\n";
+        cout << "2. Add travel time between locations\n";
+        cout << "3. Show all travel times\n";
+        cout << "4. Find optimal routes to marriage halls\n";
+        cout << "5. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+        
+        switch(choice) {
+            case 1:
+                planner.addLocations();
+                break;
+            case 2:
+                planner.addTravelTime();
+                break;
+            case 3:
+                planner.showTravelTimes();
+                break;
+            case 4:
+                planner.findOptimalRoutes();
+                break;
+            case 5:
+                cout << "Happy Wedding Planning!\n";
+                break;
+            default:
+                cout << "Invalid choice. Try again.\n";
+        }
+    } while (choice != 5);
+    
+    return 0;
+}
