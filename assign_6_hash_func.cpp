@@ -2,16 +2,17 @@
 #include <string>
 using namespace std;
 
-int hashSize; // Will be taken as input
-const int MAX_TRACKS = 5; // Max per bucket (small for testing)
+const int MAX_BUCKETS = 10;
+const int MAX_TRACKS = 3; // tracks per bucket
 const int INFO_FIELDS = 4;
 
 class MusicLibrary {
 private:
-    string*** library;        // 3D dynamic array
-    int* trackCount;          // Track counts per bucket
+    string library[MAX_BUCKETS][MAX_TRACKS][INFO_FIELDS];
+    int trackCount[MAX_BUCKETS] = {0};
+    int hashSize;
 
-    // Hash function (djb2)
+    // Hash function
     int getHash(string key) {
         unsigned long hash = 5381;
         for (char c : key) {
@@ -20,201 +21,170 @@ private:
         return hash % hashSize;
     }
 
-    // Rehashing (double hashing method)
-    int getRehash(string key, int attempt) {
-        int h1 = getHash(key);
-        int h2 = 7 - (h1 % 7);  // Second hash function
-        return (h1 + attempt * h2) % hashSize;
-    }
-
 public:
     MusicLibrary(int size) {
-        hashSize = size;
-        library = new string**[hashSize];
-        trackCount = new int[hashSize];
-
-        for (int i = 0; i < hashSize; i++) {
-            library[i] = new string*[MAX_TRACKS];
-            trackCount[i] = 0;
-            for (int j = 0; j < MAX_TRACKS; j++) {
-                library[i][j] = new string[INFO_FIELDS];
-            }
-        }
+        hashSize = size <= MAX_BUCKETS ? size : MAX_BUCKETS;
     }
 
     void addTrack() {
+        if (isFull()) {
+            cout << "Library is full!\n";
+            return;
+        }
+
         string title, artist, album, duration;
-        cout << "Enter Title: ";
-        cin.ignore();
+        cout << "Enter track title: ";
         getline(cin, title);
-        cout << "Enter Artist: ";
+        cout << "Enter artist: ";
         getline(cin, artist);
-        cout << "Enter Album: ";
+        cout << "Enter album: ";
         getline(cin, album);
-        cout << "Enter Duration: ";
+        cout << "Enter duration (seconds): ";
         getline(cin, duration);
 
-        int index = getHash(title);
-        int attempt = 0;
+        int bucket = getHash(title);
+        int originalBucket = bucket;
 
-        // Rehashing if bucket is full
-        while (trackCount[index] >= MAX_TRACKS && attempt < hashSize) {
-            attempt++;
-            index = getRehash(title, attempt);
+        // Rehashing with linear probing
+        while (trackCount[bucket] >= MAX_TRACKS) {
+            bucket = (bucket + 1) % hashSize;
+            if (bucket == originalBucket) {
+                cout << "No space available after rehashing!\n";
+                return;
+            }
         }
 
-        if (trackCount[index] < MAX_TRACKS) {
-            int pos = trackCount[index];
-            library[index][pos][0] = title;
-            library[index][pos][1] = artist;
-            library[index][pos][2] = album;
-            library[index][pos][3] = duration;
-            trackCount[index]++;
-            cout << "Track added at index " << index << "\n";
-        } else {
-            cout << "Library is full, can't add track.\n";
-        }
+        int idx = trackCount[bucket];
+        library[bucket][idx][0] = title;
+        library[bucket][idx][1] = artist;
+        library[bucket][idx][2] = album;
+        library[bucket][idx][3] = duration;
+        trackCount[bucket]++;
+        cout << "Track added at bucket " << bucket << "!\n";
     }
 
     void searchTrack() {
         string title;
-        cout << "Enter title to search: ";
-        cin.ignore();
+        cout << "Enter track title to search: ";
         getline(cin, title);
+        int bucket = getHash(title);
+        int originalBucket = bucket;
 
-        int index = getHash(title);
-        int attempt = 0;
-        bool found = false;
-
-        while (attempt < hashSize) {
-            for (int i = 0; i < trackCount[index]; i++) {
-                if (library[index][i][0] == title) {
-                    cout << "\nTrack Found at index " << index << ":\n";
-                    cout << "Title: " << library[index][i][0] << "\n";
-                    cout << "Artist: " << library[index][i][1] << "\n";
-                    cout << "Album: " << library[index][i][2] << "\n";
-                    cout << "Duration: " << library[index][i][3] << "\n";
-                    found = true;
+        // Search with rehashing
+        for (int i = 0; i < hashSize; i++) {
+            for (int j = 0; j < trackCount[bucket]; j++) {
+                if (library[bucket][j][0] == title) {
+                    cout << "\nTrack Found:\n";
+                    cout << "Title: " << library[bucket][j][0] << "\n";
+                    cout << "Artist: " << library[bucket][j][1] << "\n";
+                    cout << "Album: " << library[bucket][j][2] << "\n";
+                    cout << "Duration: " << library[bucket][j][3] << " seconds\n";
                     return;
                 }
             }
-            attempt++;
-            index = getRehash(title, attempt);
+            bucket = (bucket + 1) % hashSize;
+            if (bucket == originalBucket) break;
         }
 
-        if (!found) cout << "Track not found.\n";
+        cout << "Track not found!\n";
+    }
+
+    void displayAll() {
+        cout << "\nMusic Library Contents:\n";
+        for (int i = 0; i < hashSize; i++) {
+            for (int j = 0; j < trackCount[i]; j++) {
+                cout << "Bucket " << i << ": "
+                     << library[i][j][0] << " - "
+                     << library[i][j][1] << " ("
+                     << library[i][j][3] << "s)\n";
+            }
+        }
     }
 
     void updateTrack() {
         string title;
         cout << "Enter title to update: ";
-        cin.ignore();
         getline(cin, title);
+        int bucket = getHash(title);
+        int originalBucket = bucket;
 
-        int index = getHash(title);
-        int attempt = 0;
-        bool updated = false;
-
-        while (attempt < hashSize) {
-            for (int i = 0; i < trackCount[index]; i++) {
-                if (library[index][i][0] == title) {
-                    cout << "Enter new Artist: ";
-                    getline(cin, library[index][i][1]);
-                    cout << "Enter new Album: ";
-                    getline(cin, library[index][i][2]);
-                    cout << "Enter new Duration: ";
-                    getline(cin, library[index][i][3]);
-                    cout << "Track updated.\n";
-                    updated = true;
+        for (int i = 0; i < hashSize; i++) {
+            for (int j = 0; j < trackCount[bucket]; j++) {
+                if (library[bucket][j][0] == title) {
+                    cout << "Enter new artist: ";
+                    getline(cin, library[bucket][j][1]);
+                    cout << "Enter new album: ";
+                    getline(cin, library[bucket][j][2]);
+                    cout << "Enter new duration: ";
+                    getline(cin, library[bucket][j][3]);
+                    cout << "Track updated successfully!\n";
                     return;
                 }
             }
-            attempt++;
-            index = getRehash(title, attempt);
+            bucket = (bucket + 1) % hashSize;
+            if (bucket == originalBucket) break;
         }
 
-        if (!updated) cout << "Track not found to update.\n";
+        cout << "Track not found for update!\n";
     }
 
     void deleteTrack() {
         string title;
         cout << "Enter title to delete: ";
-        cin.ignore();
         getline(cin, title);
+        int bucket = getHash(title);
+        int originalBucket = bucket;
 
-        int index = getHash(title);
-        int attempt = 0;
-        bool deleted = false;
-
-        while (attempt < hashSize) {
-            for (int i = 0; i < trackCount[index]; i++) {
-                if (library[index][i][0] == title) {
-                    for (int j = i; j < trackCount[index] - 1; j++) {
-                        for (int k = 0; k < INFO_FIELDS; k++) {
-                            library[index][j][k] = library[index][j + 1][k];
+        for (int i = 0; i < hashSize; i++) {
+            for (int j = 0; j < trackCount[bucket]; j++) {
+                if (library[bucket][j][0] == title) {
+                    for (int k = j; k < trackCount[bucket] - 1; k++) {
+                        for (int f = 0; f < INFO_FIELDS; f++) {
+                            library[bucket][k][f] = library[bucket][k + 1][f];
                         }
                     }
-                    trackCount[index]--;
-                    cout << "Track deleted.\n";
-                    deleted = true;
+                    trackCount[bucket]--;
+                    cout << "Track deleted successfully!\n";
                     return;
                 }
             }
-            attempt++;
-            index = getRehash(title, attempt);
+            bucket = (bucket + 1) % hashSize;
+            if (bucket == originalBucket) break;
         }
 
-        if (!deleted) cout << "Track not found to delete.\n";
+        cout << "Track not found for deletion!\n";
     }
 
-    void displayAll() {
-        cout << "\n--- Music Library ---\n";
+    bool isFull() {
         for (int i = 0; i < hashSize; i++) {
-            if (trackCount[i] > 0) {
-                cout << "Bucket " << i << ":\n";
-                for (int j = 0; j < trackCount[i]; j++) {
-                    cout << "  - " << library[i][j][0]
-                         << " | " << library[i][j][1]
-                         << " | " << library[i][j][2]
-                         << " | " << library[i][j][3] << "\n";
-                }
-            }
+            if (trackCount[i] < MAX_TRACKS) return false;
         }
-    }
-
-    ~MusicLibrary() {
-        for (int i = 0; i < hashSize; i++) {
-            for (int j = 0; j < MAX_TRACKS; j++) {
-                delete[] library[i][j];
-            }
-            delete[] library[i];
-        }
-        delete[] library;
-        delete[] trackCount;
+        return true;
     }
 };
 
 int main() {
     int size;
-    cout << "Enter size of hash table: ";
+    cout << "Enter hash table size (max " << MAX_BUCKETS << "): ";
     cin >> size;
+    cin.ignore();
 
     MusicLibrary lib(size);
     int choice;
 
     do {
-        cout << "\n1. Add Track\n2. Search Track\n3. Update Track\n4. Delete Track\n5. Display All\n6. Exit\n";
-        cout << "Enter your choice: ";
+        cout << "\nMenu:\n1. Add\n2. Search\n3. Display\n4. Update\n5. Delete\n6. Exit\nChoice: ";
         cin >> choice;
+        cin.ignore();
 
         switch (choice) {
             case 1: lib.addTrack(); break;
             case 2: lib.searchTrack(); break;
-            case 3: lib.updateTrack(); break;
-            case 4: lib.deleteTrack(); break;
-            case 5: lib.displayAll(); break;
+            case 3: lib.displayAll(); break;
+            case 4: lib.updateTrack(); break;
+            case 5: lib.deleteTrack(); break;
             case 6: cout << "Exiting...\n"; break;
-            default: cout << "Invalid choice.\n";
+            default: cout << "Invalid choice!\n";
         }
     } while (choice != 6);
 
