@@ -34,7 +34,7 @@ public:
 
         string title, artist, album, duration;
         cout << "Enter track title: ";
-        getline(cin, title);
+        getline(cin >> ws, title); // Fix added here
         cout << "Enter artist: ";
         getline(cin, artist);
         cout << "Enter album: ";
@@ -45,7 +45,6 @@ public:
         int bucket = getHash(title);
         int originalBucket = bucket;
 
-        // Rehashing with linear probing
         while (trackCount[bucket] >= MAX_TRACKS) {
             bucket = (bucket + 1) % hashSize;
             if (bucket == originalBucket) {
@@ -66,11 +65,10 @@ public:
     void searchTrack() {
         string title;
         cout << "Enter track title to search: ";
-        getline(cin, title);
+        getline(cin >> ws, title); // Fix added here
         int bucket = getHash(title);
         int originalBucket = bucket;
 
-        // Search with rehashing
         for (int i = 0; i < hashSize; i++) {
             for (int j = 0; j < trackCount[bucket]; j++) {
                 if (library[bucket][j][0] == title) {
@@ -104,7 +102,7 @@ public:
     void updateTrack() {
         string title;
         cout << "Enter title to update: ";
-        getline(cin, title);
+        getline(cin >> ws, title); // Fix added here
         int bucket = getHash(title);
         int originalBucket = bucket;
 
@@ -131,7 +129,7 @@ public:
     void deleteTrack() {
         string title;
         cout << "Enter title to delete: ";
-        getline(cin, title);
+        getline(cin >> ws, title); // Fix added here
         int bucket = getHash(title);
         int originalBucket = bucket;
 
