@@ -11,6 +11,8 @@ private:
     string library[MAX_BUCKETS][MAX_TRACKS][INFO_FIELDS];
     int trackCount[MAX_BUCKETS] = {0};
     int hashSize;
+    int totalProbes = 0;  // Variable to count total probes
+    int totalCollisions = 0;  // Variable to count collisions
 
     int getHash(string key) {
         unsigned long hash = 5381;
@@ -48,7 +50,9 @@ public:
         while (i < hashSize) {
             newBucket = (bucket + i * i) % hashSize;
             if (trackCount[newBucket] < MAX_TRACKS) break;
-            i++;
+
+            i = i * 2;  // Apply the i*2 factor when collision occurs
+            totalCollisions++;  // Increment collision count
         }
 
         if (i == hashSize) {
@@ -62,6 +66,7 @@ public:
         library[newBucket][idx][2] = album;
         library[newBucket][idx][3] = duration;
         trackCount[newBucket]++;
+        totalProbes += i;  // Add the number of probes to the total
         cout << "Track added at bucket " << newBucket << "!\n";
     }
 
@@ -96,9 +101,9 @@ public:
         for (int i = 0; i < hashSize; i++) {
             for (int j = 0; j < trackCount[i]; j++) {
                 cout << "Bucket " << i << ": "
-                     << library[i][j][0] << " - "
-                     << library[i][j][1] << " ("
-                     << library[i][j][3] << "s)\n";
+                    << library[i][j][0] << " - "
+                    << library[i][j][1] << " ("
+                    << library[i][j][3] << "s)\n";
             }
         }
     }
@@ -165,6 +170,15 @@ public:
         }
         return true;
     }
+
+    void displayAvgProbes() {
+        if (totalCollisions > 0) {
+            double avgProbes = static_cast<double>(totalProbes) / totalCollisions;
+            cout << "Average probes per collision: " << avgProbes << endl;
+        } else {
+            cout << "No collisions occurred.\n";
+        }
+    }
 };
 
 int main() {
@@ -177,7 +191,7 @@ int main() {
     int choice;
 
     do {
-        cout << "\nMenu:\n1. Add\n2. Search\n3. Display\n4. Update\n5. Delete\n6. Exit\nChoice: ";
+        cout << "\nMenu:\n1. Add\n2. Search\n3. Display\n4. Update\n5. Delete\n6. Display Avg Probes\n7. Exit\nChoice: ";
         cin >> choice;
         cin.ignore();
 
@@ -187,10 +201,11 @@ int main() {
             case 3: lib.displayAll(); break;
             case 4: lib.updateTrack(); break;
             case 5: lib.deleteTrack(); break;
-            case 6: cout << "Exiting...\n"; break;
+            case 6: lib.displayAvgProbes(); break;
+            case 7: cout << "Exiting...\n"; break;
             default: cout << "Invalid choice!\n";
         }
-    } while (choice != 6);
+    } while (choice != 7);
 
     return 0;
 }
