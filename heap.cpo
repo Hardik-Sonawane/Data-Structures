@@ -1,0 +1,66 @@
+#include <iostream>
+using namespace std;
+
+// Sift-up for Max Heap
+void maxHeapifyUp(int i, int a[]) {
+    if (i == 0) return;
+    int parent = (i - 1) / 2;
+    if (a[i] > a[parent]) {
+        swap(a[i], a[parent]);
+        maxHeapifyUp(parent, a);
+    }
+}
+
+// Sift-up for Min Heap
+void minHeapifyUp(int i, int a[]) {
+    if (i == 0) return;
+    int parent = (i - 1) / 2;
+    if (a[i] < a[parent]) {
+        swap(a[i], a[parent]);
+        minHeapifyUp(parent, a);
+    }
+}
+
+// Build Max Heap
+void buildMaxHeap(int a[], int n) {
+    for (int i = 1; i < n; i++) {
+        maxHeapifyUp(i, a);
+    }
+}
+
+// Build Min Heap
+void buildMinHeap(int a[], int n) {
+    for (int i = 1; i < n; i++) {
+        minHeapifyUp(i, a);
+    }
+}
+
+// Print array
+void printHeap(const string& label, int a[], int n) {
+    cout << label << ": ";
+    for (int i = 0; i < n; i++) {
+        cout << a[i] << " ";
+    }
+    cout << endl;
+}
+
+int main() {
+    int n;
+    cout << "Enter the number of elements: ";
+    cin >> n;
+
+    int arr1[n], arr2[n];
+    cout << "Enter " << n << " elements:\n";
+    for (int i = 0; i < n; i++) {
+        cin >> arr1[i];
+        arr2[i] = arr1[i]; // Copy for Min Heap
+    }
+
+    buildMaxHeap(arr1, n);
+    buildMinHeap(arr2, n);
+
+    printHeap("Max Heap", arr1, n);
+    printHeap("Min Heap", arr2, n);
+
+    return 0;
+}
