@@ -21,6 +21,46 @@ void minHeapifyUp(int i, int a[]) {
     }
 }
 
+// Sift-down for Max Heap
+void maxHeapifyDown(int i, int a[], int n) {
+    int leftChild = 2 * i + 1;
+    int rightChild = 2 * i + 2;
+    int largest = i;
+
+    if (leftChild < n && a[leftChild] > a[largest]) {
+        largest = leftChild;
+    }
+
+    if (rightChild < n && a[rightChild] > a[largest]) {
+        largest = rightChild;
+    }
+
+    if (largest != i) {
+        swap(a[i], a[largest]);
+        maxHeapifyDown(largest, a, n);
+    }
+}
+
+// Sift-down for Min Heap
+void minHeapifyDown(int i, int a[], int n) {
+    int leftChild = 2 * i + 1;
+    int rightChild = 2 * i + 2;
+    int smallest = i;
+
+    if (leftChild < n && a[leftChild] < a[smallest]) {
+        smallest = leftChild;
+    }
+
+    if (rightChild < n && a[rightChild] < a[smallest]) {
+        smallest = rightChild;
+    }
+
+    if (smallest != i) {
+        swap(a[i], a[smallest]);
+        minHeapifyDown(smallest, a, n);
+    }
+}
+
 // Build Max Heap
 void buildMaxHeap(int a[], int n) {
     for (int i = 1; i < n; i++) {
@@ -33,6 +73,50 @@ void buildMinHeap(int a[], int n) {
     for (int i = 1; i < n; i++) {
         minHeapifyUp(i, a);
     }
+}
+
+// Delete operation for Max Heap (removes the root)
+void deleteMax(int a[], int& n) {
+    if (n <= 0) {
+        cout << "Heap is empty!" << endl;
+        return;
+    }
+
+    // Move the last element to the root
+    a[0] = a[n - 1];
+    n--; // Decrease heap size
+
+    // Restore the heap property
+    maxHeapifyDown(0, a, n);
+}
+
+// Delete operation for Min Heap (removes the root)
+void deleteMin(int a[], int& n) {
+    if (n <= 0) {
+        cout << "Heap is empty!" << endl;
+        return;
+    }
+
+    // Move the last element to the root
+    a[0] = a[n - 1];
+    n--; // Decrease heap size
+
+    // Restore the heap property
+    minHeapifyDown(0, a, n);
+}
+
+// Insert operation for Max Heap
+void insertMax(int a[], int& n, int value) {
+    a[n] = value;
+    n++;
+    maxHeapifyUp(n - 1, a);
+}
+
+// Insert operation for Min Heap
+void insertMin(int a[], int& n, int value) {
+    a[n] = value;
+    n++;
+    minHeapifyUp(n - 1, a);
 }
 
 // Print array
@@ -59,8 +143,52 @@ int main() {
     buildMaxHeap(arr1, n);
     buildMinHeap(arr2, n);
 
-    printHeap("Max Heap", arr1, n);
-    printHeap("Min Heap", arr2, n);
+    int operation;
+    int value;
+
+    while (true) {
+        cout << "\nChoose operation: \n";
+        cout << "1. Insert element\n";
+        cout << "2. Delete root\n";
+        cout << "3. Print heaps\n";
+        cout << "4. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> operation;
+
+        if (operation == 1) {
+            cout << "Enter value to insert: ";
+            cin >> value;
+
+            // Insert into Max Heap
+            insertMax(arr1, n, value);
+
+            // Insert into Min Heap
+            insertMin(arr2, n, value);
+
+        } else if (operation == 2) {
+            int heapChoice;
+            cout << "Choose heap to delete root from:\n";
+            cout << "1. Max Heap\n";
+            cout << "2. Min Heap\n";
+            cout << "Enter your choice: ";
+            cin >> heapChoice;
+
+            if (heapChoice == 1) {
+                deleteMax(arr1, n);
+            } else if (heapChoice == 2) {
+                deleteMin(arr2, n);
+            } else {
+                cout << "Invalid choice!" << endl;
+            }
+        } else if (operation == 3) {
+            printHeap("Max Heap", arr1, n);
+            printHeap("Min Heap", arr2, n);
+        } else if (operation == 4) {
+            break;
+        } else {
+            cout << "Invalid choice! Please try again." << endl;
+        }
+    }
 
     return 0;
 }
